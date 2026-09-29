@@ -34,6 +34,7 @@ import {
   type StrokeWidthKey,
   isTransparent,
   DEFAULT_ZOOM,
+  DEFAULT_MARKDOWN_FONT_SIZE,
 } from "@excalidraw/common";
 import {
   calculateFixedPointForNonElbowArrowBinding,
@@ -232,6 +233,7 @@ export const AllowedExcalidrawActiveTools: Record<
   arrow: true,
   freedraw: true,
   stickynote: true,
+  markdown: true,
   eraser: false,
   custom: true,
   frame: true,
@@ -738,6 +740,13 @@ export const restoreElement = (
             element.height,
         }),
       );
+    case "markdown":
+      return restoreElementWithProperties(element, {
+        markdown: typeof element.markdown === "string" ? element.markdown : "",
+        fontSize: isFiniteNumber(element.fontSize)
+          ? element.fontSize
+          : DEFAULT_MARKDOWN_FONT_SIZE,
+      });
     case "magicframe":
     case "frame":
       return restoreElementWithProperties(element, {

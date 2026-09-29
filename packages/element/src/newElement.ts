@@ -5,6 +5,11 @@ import {
   DEFAULT_TEXT_ALIGN,
   DEFAULT_STICKY_NOTE_SIZE,
   STICKY_NOTE_MIN_SIZE,
+  DEFAULT_MARKDOWN_BG,
+  DEFAULT_MARKDOWN_FONT_SIZE,
+  DEFAULT_MARKDOWN_SOURCE,
+  MARKDOWN_CORNER_RADIUS,
+  ROUNDNESS,
   DEFAULT_VERTICAL_ALIGN,
   DEFAULT_STROKE_STREAMLINE,
   VERTICAL_ALIGN,
@@ -56,6 +61,7 @@ import type {
   ExcalidrawElbowArrowElement,
   ExcalidrawLineElement,
   ExcalidrawStickyNoteElement,
+  ExcalidrawMarkdownElement,
 } from "./types";
 
 export type ElementConstructorOpts = MarkOptional<
@@ -240,6 +246,39 @@ export const newStickyNoteElement = (
     ...base,
     baseHeight: opts.baseHeight ?? base.height,
   });
+};
+
+/**
+ * A markdown card is always a solid, borderless card: its `strokeColor` is
+ * the text color and `backgroundColor` fills the card.
+ */
+export const newMarkdownElement = (
+  opts: {
+    type: "markdown";
+    markdown?: string;
+    fontSize?: number;
+  } & ElementConstructorOpts,
+): NonDeleted<ExcalidrawMarkdownElement> => {
+  const { markdown, fontSize, ...rest } = opts;
+  return {
+    ..._newElementBase<ExcalidrawMarkdownElement>("markdown", {
+      ...rest,
+      backgroundColor:
+        !rest.backgroundColor || rest.backgroundColor === "transparent"
+          ? DEFAULT_MARKDOWN_BG
+          : rest.backgroundColor,
+      fillStyle: "solid",
+      roundness:
+        rest.roundness === undefined
+          ? {
+              type: ROUNDNESS.ADAPTIVE_RADIUS,
+              value: MARKDOWN_CORNER_RADIUS,
+            }
+          : rest.roundness,
+    }),
+    markdown: markdown ?? DEFAULT_MARKDOWN_SOURCE,
+    fontSize: fontSize ?? DEFAULT_MARKDOWN_FONT_SIZE,
+  };
 };
 
 export const newEmbeddableElement = (

@@ -267,6 +267,8 @@ export const BUCKET_FILL_BACKGROUND_PICKS = [
 // sticky notes are their own color domain (own defaults, own picks)
 export const DEFAULT_STICKY_NOTE_BG = "#ffdf6b";
 
+export const DEFAULT_MARKDOWN_BG = COLOR_PALETTE.gray[1];
+
 export const STICKY_NOTE_STROKE_PICKS: ColorTuple =
   DEFAULT_ELEMENT_STROKE_PICKS;
 

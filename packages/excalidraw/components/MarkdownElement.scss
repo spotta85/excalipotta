@@ -1,0 +1,318 @@
+@import "../css/variables.module.scss";
+
+.excalidraw {
+  --markdown-code-font: "Cascadia", ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
+
+  .excalidraw-markdown-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: var(--zIndex-canvas);
+    transform-origin: top left;
+    pointer-events: none;
+
+    // the editor sits above the interactive canvas and takes input
+    &--editing {
+      z-index: var(--zIndex-canvasButtons);
+      pointer-events: auto;
+    }
+  }
+
+  .excalidraw-markdown {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    transform-origin: center;
+    font-family: var(--ui-font);
+    line-height: 1.5;
+    overflow-wrap: break-word;
+    user-select: none;
+    // subtle separation from the canvas, like the rest of excalidraw's cards
+    box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 6%, transparent);
+
+    &--editing {
+      box-shadow: 0 0 0 1.5px var(--color-primary);
+    }
+  }
+
+  // (specific enough to beat the global `textarea` input styling)
+  .excalidraw-markdown textarea.excalidraw-markdown__editor {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    // MARKDOWN_PADDING
+    padding: 16px;
+    border: none;
+    border-radius: inherit;
+    outline: none;
+    resize: none;
+    background: transparent;
+    color: inherit;
+    font-family: var(--markdown-code-font);
+    font-size: 0.875em;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    tab-size: 2;
+    user-select: text;
+  }
+
+  .excalidraw-markdown__content {
+    > :first-child {
+      margin-top: 0;
+    }
+
+    > :last-child {
+      margin-bottom: 0;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      margin: 0.9em 0 0.4em;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    h1 {
+      font-size: 1.6em;
+    }
+    h2 {
+      font-size: 1.35em;
+    }
+    h3 {
+      font-size: 1.15em;
+    }
+    h4,
+    h5,
+    h6 {
+      font-size: 1em;
+    }
+
+    p,
+    ul,
+    ol,
+    pre,
+    blockquote,
+    table {
+      margin: 0 0 0.7em;
+    }
+
+    ul,
+    ol {
+      padding-left: 1.4em;
+    }
+
+    li + li {
+      margin-top: 0.15em;
+    }
+
+    li:has(> input[type="checkbox"]) {
+      list-style: none;
+      margin-left: -1.3em;
+    }
+
+    li > input[type="checkbox"] {
+      margin: 0 0.4em 0 0;
+      vertical-align: middle;
+    }
+
+    a {
+      color: var(--color-primary);
+      text-decoration: underline;
+    }
+
+    strong {
+      font-weight: 700;
+    }
+
+    hr {
+      margin: 1em 0;
+      border: none;
+      border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+    }
+
+    blockquote {
+      padding: 0.1em 0 0.1em 0.9em;
+      border-left: 3px solid color-mix(in srgb, currentColor 25%, transparent);
+      opacity: 0.85;
+    }
+
+    img {
+      max-width: 100%;
+      border-radius: 6px;
+    }
+
+    code {
+      font-family: var(--markdown-code-font);
+      font-size: 0.875em;
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+      background: color-mix(in srgb, currentColor 8%, transparent);
+    }
+
+    pre {
+      padding: 0.75em 0.9em;
+      border-radius: 8px;
+      overflow: hidden;
+      background: color-mix(in srgb, currentColor 6%, transparent);
+
+      code {
+        display: block;
+        padding: 0;
+        border-radius: 0;
+        background: none;
+        // a card has a fixed width and can't scroll, so long lines wrap
+        white-space: pre-wrap;
+        line-height: 1.5;
+      }
+    }
+
+    table {
+      border-collapse: collapse;
+      font-size: 0.95em;
+    }
+
+    th,
+    td {
+      padding: 0.3em 0.7em;
+      border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+    }
+
+    th {
+      font-weight: 700;
+      background: color-mix(in srgb, currentColor 5%, transparent);
+    }
+  }
+
+  // syntax highlighting (github palette)
+  .excalidraw-markdown .hljs {
+    &-comment,
+    &-quote {
+      color: #6a737d;
+      font-style: italic;
+    }
+    &-keyword,
+    &-selector-tag,
+    &-type,
+    &-doctag,
+    &-template-tag,
+    &-template-variable,
+    &-variable.language_ {
+      color: #d73a49;
+    }
+    &-title,
+    &-title.class_,
+    &-title.function_,
+    &-section {
+      color: #6f42c1;
+    }
+    &-attr,
+    &-attribute,
+    &-literal,
+    &-meta,
+    &-number,
+    &-operator,
+    &-variable,
+    &-selector-attr,
+    &-selector-class,
+    &-selector-id {
+      color: #005cc5;
+    }
+    &-string,
+    &-regexp,
+    &-meta .hljs-string {
+      color: #032f62;
+    }
+    &-built_in,
+    &-symbol {
+      color: #e36209;
+    }
+    &-name,
+    &-selector-pseudo,
+    &-tag {
+      color: #22863a;
+    }
+    &-bullet {
+      color: #735c0f;
+    }
+    &-addition {
+      color: #22863a;
+      background-color: #f0fff4;
+    }
+    &-deletion {
+      color: #b31d28;
+      background-color: #ffeef0;
+    }
+    &-emphasis {
+      font-style: italic;
+    }
+    &-strong {
+      font-weight: 700;
+    }
+  }
+
+  &.theme--dark .excalidraw-markdown .hljs {
+    &-comment,
+    &-quote {
+      color: #8b949e;
+    }
+    &-keyword,
+    &-selector-tag,
+    &-type,
+    &-doctag,
+    &-template-tag,
+    &-template-variable,
+    &-variable.language_ {
+      color: #ff7b72;
+    }
+    &-title,
+    &-title.class_,
+    &-title.function_,
+    &-section {
+      color: #d2a8ff;
+    }
+    &-attr,
+    &-attribute,
+    &-literal,
+    &-meta,
+    &-number,
+    &-operator,
+    &-variable,
+    &-selector-attr,
+    &-selector-class,
+    &-selector-id {
+      color: #79c0ff;
+    }
+    &-string,
+    &-regexp,
+    &-meta .hljs-string {
+      color: #a5d6ff;
+    }
+    &-built_in,
+    &-symbol {
+      color: #ffa657;
+    }
+    &-name,
+    &-selector-pseudo,
+    &-tag {
+      color: #7ee787;
+    }
+    &-bullet {
+      color: #f2cc60;
+    }
+    &-addition {
+      color: #aff5b4;
+      background-color: #033a16;
+    }
+    &-deletion {
+      color: #ffdcd7;
+      background-color: #67060c;
+    }
+  }
+}

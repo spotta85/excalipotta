@@ -23,6 +23,7 @@ import {
   newLinearElement,
   newMagicFrameElement,
   newStickyNoteElement,
+  newMarkdownElement,
   newTextElement,
 } from "@excalidraw/element";
 
@@ -45,6 +46,7 @@ import type {
   ExcalidrawElbowArrowElement,
   ExcalidrawArrowElement,
   ExcalidrawStickyNoteElement,
+  ExcalidrawMarkdownElement,
   FixedSegment,
   NonDeleted,
   NonDeletedExcalidrawElement,
@@ -207,6 +209,9 @@ export class API {
       ? ExcalidrawTextElement["verticalAlign"]
       : never;
     boundElements?: ExcalidrawGenericElement["boundElements"];
+    markdown?: T extends "markdown"
+      ? ExcalidrawMarkdownElement["markdown"]
+      : never;
     baseHeight?: T extends "stickynote"
       ? ExcalidrawStickyNoteElement["baseHeight"]
       : never;
@@ -251,6 +256,8 @@ export class API {
       ? ExcalidrawMagicFrameElement
       : T extends "stickynote"
       ? ExcalidrawStickyNoteElement
+      : T extends "markdown"
+      ? ExcalidrawMarkdownElement
       : ExcalidrawGenericElement
   > => {
     let element: Mutable<ExcalidrawElement> = null!;
@@ -336,6 +343,15 @@ export class API {
           height,
           type,
           baseHeight: rest.baseHeight ?? height,
+        });
+        break;
+      case "markdown":
+        element = newMarkdownElement({
+          ...base,
+          width,
+          height,
+          type,
+          markdown: rest.markdown,
         });
         break;
       case "text":

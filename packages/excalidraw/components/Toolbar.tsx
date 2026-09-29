@@ -41,6 +41,7 @@ import {
   SelectionToolButton,
   SelectionToolPopover,
   StickyNoteToolButton,
+  MarkdownToolButton,
   TextToolButton,
 } from "./Tools";
 
@@ -307,6 +308,7 @@ export const Toolbar = ({
         )}
         <TextToolButton {...toolProps} />
         <StickyNoteToolButton {...toolProps} />
+        <MarkdownToolButton {...toolProps} />
         <EraserToolButton {...toolProps} />
 
         <div

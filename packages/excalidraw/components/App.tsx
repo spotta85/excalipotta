@@ -53,6 +53,10 @@ import {
   ARROW_TYPE,
   DEFAULT_REDUCED_GLOBAL_ALPHA,
   DEFAULT_STICKY_NOTE_SIZE,
+  DEFAULT_MARKDOWN_WIDTH,
+  DEFAULT_MARKDOWN_HEIGHT,
+  MARKDOWN_MIN_SIZE,
+  MARKDOWN_PADDING,
   ZEN_MODE_TRANSITION_DURATION,
   isLocalLink,
   normalizeLink,
@@ -120,6 +124,7 @@ import {
   newEmbeddableElement,
   newMagicFrameElement,
   newStickyNoteElement,
+  newMarkdownElement,
   newIframeElement,
   newArrowElement,
   newElement,
@@ -147,6 +152,7 @@ import {
   isBindableElement,
   isTextElement,
   isStickyNoteElement,
+  isMarkdownElement,
   getNormalizedDimensions,
   isElementCompletelyInViewport,
   isElementInViewport,
@@ -266,6 +272,7 @@ import type {
   SceneElementsMap,
   NonDeletedSceneElementsMap,
   ExcalidrawBindableElement,
+  ExcalidrawMarkdownElement,
 } from "@excalidraw/element/types";
 
 import type { TransformHandleDirection } from "@excalidraw/element";
@@ -414,6 +421,7 @@ import { AppText } from "./App.text";
 import { AppTextTool } from "./App.textTool";
 import { AppBucketFill } from "./App.bucketFill";
 import { AppToolDrag, TOOL_DRAG_PREVIEW_OPACITY } from "./App.toolDrag";
+import { MarkdownContent, MarkdownEditor } from "./MarkdownElement";
 import { AppCursor } from "./App.cursor";
 import { AppDrawShape } from "./App.drawshape";
 import { AppDuplicate } from "./App.duplicate";
@@ -2068,6 +2076,173 @@ class App extends React.Component<AppProps, AppState> {
     );
   }
 
+  public startMarkdownEditing = (element: ExcalidrawMarkdownElement) => {
+    this.setState({
+      editingMarkdownId: element.id,
+      selectedElementIds: { [element.id]: true },
+      selectedGroupIds: {},
+      editingGroupId: null,
+      activeEmbeddable: null,
+    });
+  };
+
+  private stopMarkdownEditing = () => {
+    const element = this.state.editingMarkdownId
+      ? this.scene.getElement(this.state.editingMarkdownId)
+      : null;
+
+    if (isMarkdownElement(element) && !element.isDeleted) {
+      // grow the card to fit its content (never shrink what the user sized)
+      const content = this.excalidrawContainerRef.current?.querySelector(
+        `[data-markdown-id="${element.id}"] .excalidraw-markdown__content`,
+      );
+      if (content instanceof HTMLElement) {
+        const neededHeight = content.scrollHeight + MARKDOWN_PADDING * 2 + 1;
+        if (neededHeight > element.height) {
+          this.scene.mutateElement(element, { height: neededHeight });
+        }
+      }
+      this.store.scheduleCapture();
+    }
+
+    this.setState({ editingMarkdownId: null });
+    this.focusContainer();
+  };
+
+  private getMarkdownElementLayout(
+    el: NonDeleted<ExcalidrawMarkdownElement>,
+    overrides?: ElementRenderOverrides | null,
+  ) {
+    const renderState = this.getElementRenderState(el, overrides);
+    const isVisible = isElementInViewport(
+      getRenderElementWithPositionOverride(el, renderState.offset),
+      this.state.width,
+      this.state.height,
+      this.state,
+      this.scene.getNonDeletedElementsMap(),
+    );
+    const { x, y } = sceneCoordsToViewportCoords(
+      {
+        sceneX: el.x + renderState.offset.x,
+        sceneY: el.y + renderState.offset.y,
+      },
+      this.state,
+    );
+    const isDarkTheme = this.state.theme === THEME.DARK;
+
+    return {
+      isVisible,
+      containerStyle: {
+        transform: `translate(${x - this.state.offsetLeft}px, ${
+          y - this.state.offsetTop
+        }px) scale(${this.state.zoom.value})`,
+        opacity:
+          renderState.opacity *
+          (this.state.openDialog?.name === "elementLinkSelector"
+            ? DEFAULT_REDUCED_GLOBAL_ALPHA
+            : 1),
+      },
+      cardStyle: {
+        width: `${el.width}px`,
+        height: `${el.height}px`,
+        padding: `${MARKDOWN_PADDING}px`,
+        fontSize: `${el.fontSize}px`,
+        transform: `rotate(${el.angle}rad)`,
+        borderRadius: `${getCornerRadius(Math.min(el.width, el.height), el)}px`,
+        background: applyDarkModeFilter(el.backgroundColor, isDarkTheme),
+        color: applyDarkModeFilter(el.strokeColor, isDarkTheme),
+      },
+    };
+  }
+
+  /**
+   * Markdown cards are HTML laid out over the static canvas (which skips
+   * them), below the interactive canvas so selection and handles stay on
+   * top and pointer input still goes to the canvas.
+   */
+  private renderMarkdownElements() {
+    const elements = this.scene
+      .getNonDeletedElements()
+      .filter((el) => isMarkdownElement(el));
+
+    if (!elements.length) {
+      return null;
+    }
+
+    return (
+      <>
+        {elements.map((el) => {
+          if (!isMarkdownElement(el)) {
+            return null;
+          }
+          const isEditing = this.state.editingMarkdownId === el.id;
+          const { isVisible, containerStyle, cardStyle } =
+            this.getMarkdownElementLayout(el);
+          if (!isVisible) {
+            return null;
+          }
+          return (
+            <div
+              key={el.id}
+              className="excalidraw-markdown-container"
+              style={containerStyle}
+            >
+              <div
+                data-markdown-id={el.id}
+                className="excalidraw-markdown"
+                style={{
+                  ...cardStyle,
+                  // keeps its box (for measuring) while the editor covers it
+                  visibility: isEditing ? "hidden" : undefined,
+                }}
+              >
+                <MarkdownContent markdown={el.markdown} />
+              </div>
+            </div>
+          );
+        })}
+      </>
+    );
+  }
+
+  private renderMarkdownEditor() {
+    const element = this.state.editingMarkdownId
+      ? this.scene.getNonDeletedElement(this.state.editingMarkdownId)
+      : null;
+
+    if (!isMarkdownElement(element)) {
+      return null;
+    }
+
+    // editing is interaction: it keeps to document geometry
+    const { containerStyle, cardStyle } = this.getMarkdownElementLayout(
+      element,
+      null,
+    );
+
+    return (
+      <div
+        className="excalidraw-markdown-container excalidraw-markdown-container--editing"
+        style={containerStyle}
+      >
+        <div
+          className="excalidraw-markdown excalidraw-markdown--editing"
+          // the textarea pads itself so its scroll area spans the card
+          style={{ ...cardStyle, padding: 0 }}
+        >
+          <MarkdownEditor
+            key={element.id}
+            value={element.markdown}
+            onChange={(markdown) => {
+              this.scene.mutateElement(element, { markdown });
+            }}
+            onSubmit={this.stopMarkdownEditing}
+          />
+        </div>
+      </div>
+    );
+  }
+
   private getFrameNameDOMId = (frameElement: ExcalidrawElement) => {
     return `${this.id}-frame-name-${frameElement.id}`;
   };
@@ -2624,6 +2799,7 @@ class App extends React.Component<AppProps, AppState> {
                               imageCache: this.imageCache,
                               isExporting: false,
                               renderGrid: isGridModeEnabled(this),
+                              markdownOverlay: true,
                               renderLinks: this.isLinksEnabled(),
                               canvasBackgroundColor:
                                 this.state.viewBackgroundColor,
@@ -2669,6 +2845,7 @@ class App extends React.Component<AppProps, AppState> {
                               }
                             />
                           )}
+                          {this.renderMarkdownElements()}
                           <InteractiveCanvas
                             app={this}
                             containerRef={this.excalidrawContainerRef}
@@ -2709,6 +2886,7 @@ class App extends React.Component<AppProps, AppState> {
                               />
                             )}
                           {this.renderFrameNames()}
+                          {this.renderMarkdownEditor()}
                           {this.isDefaultUIEnabled() &&
                             this.state.activeLockedId && (
                               <UnlockPopup
@@ -5487,6 +5665,13 @@ class App extends React.Component<AppProps, AppState> {
             this.setState({
               editingFrame: selectedElement.id,
             });
+          } else if (
+            isMarkdownElement(selectedElement) &&
+            !selectedElement.locked
+          ) {
+            this.startMarkdownEditing(selectedElement);
+            event.preventDefault();
+            return;
           }
         }
       }
@@ -6300,6 +6485,12 @@ class App extends React.Component<AppProps, AppState> {
 
     if (selectedElements.length === 1 && isImageElement(selectedElements[0])) {
       this.startImageCropping(selectedElements[0]);
+      return;
+    }
+
+    const hitMarkdownElement = this.getElementAtPosition(sceneX, sceneY);
+    if (isMarkdownElement(hitMarkdownElement) && !hitMarkdownElement.locked) {
+      this.startMarkdownEditing(hitMarkdownElement);
       return;
     }
 
@@ -9345,6 +9536,7 @@ class App extends React.Component<AppProps, AppState> {
       | "selection"
       | "rectangle"
       | "stickynote"
+      | "markdown"
       | "diamond"
       | "ellipse"
       | "iframe"
@@ -9367,7 +9559,11 @@ class App extends React.Component<AppProps, AppState> {
   }
 
   private createGenericElementOnPointerDown = (
-    elementType: ExcalidrawGenericElement["type"] | "embeddable" | "stickynote",
+    elementType:
+      | ExcalidrawGenericElement["type"]
+      | "embeddable"
+      | "stickynote"
+      | "markdown",
     pointerDownState: PointerDownState,
   ): void => {
     const [gridX, gridY] = getGridPoint(
@@ -9414,6 +9610,18 @@ class App extends React.Component<AppProps, AppState> {
       element = newStickyNoteElement({
         type: "stickynote",
         ...baseElementAttributes,
+      });
+    } else if (elementType === "markdown") {
+      // a card has its own look (gray, rounded, borderless) rather than the
+      // current shape style
+      element = newMarkdownElement({
+        type: "markdown",
+        x: baseElementAttributes.x,
+        y: baseElementAttributes.y,
+        strokeColor: this.state.currentItemStrokeColor,
+        opacity: baseElementAttributes.opacity,
+        locked: false,
+        frameId: baseElementAttributes.frameId,
       });
     } else {
       element = newElement({
@@ -10831,6 +11039,71 @@ class App extends React.Component<AppProps, AppState> {
           sceneY: newElement.y + newElement.height / 2,
           container: newElement,
         });
+        return;
+      }
+
+      if (newElement && isMarkdownElement(newElement)) {
+        // a click places a default-sized card centered on the pointer; a
+        // drag keeps its size, floored to the minimum
+        const zoom = this.state.zoom.value;
+        const isClick =
+          newElement.width * zoom < DRAGGING_THRESHOLD &&
+          newElement.height * zoom < DRAGGING_THRESHOLD;
+        let nextGeometry;
+        if (isClick) {
+          const [x, y] = getGridPoint(
+            pointerDownState.origin.x - DEFAULT_MARKDOWN_WIDTH / 2,
+            pointerDownState.origin.y - DEFAULT_MARKDOWN_HEIGHT / 2,
+            childEvent[KEYS.CTRL_OR_CMD] ? null : this.getEffectiveGridSize(),
+          );
+          nextGeometry = {
+            x,
+            y,
+            width: DEFAULT_MARKDOWN_WIDTH,
+            height: DEFAULT_MARKDOWN_HEIGHT,
+          };
+        } else {
+          const width = Math.max(newElement.width, MARKDOWN_MIN_SIZE);
+          const height = Math.max(newElement.height, MARKDOWN_MIN_SIZE);
+          const { originInGrid } = pointerDownState;
+          nextGeometry = {
+            x:
+              newElement.x < originInGrid.x
+                ? originInGrid.x - width
+                : newElement.x,
+            y:
+              newElement.y < originInGrid.y
+                ? originInGrid.y - height
+                : newElement.y,
+            width,
+            height,
+          };
+        }
+
+        this.scene.mutateElement(newElement, nextGeometry, {
+          informMutation: false,
+          isDragging: false,
+        });
+        this.store.scheduleCapture();
+        this.scene.triggerUpdate();
+
+        if (activeTool.locked) {
+          this.setState((prevState) => ({
+            newElement: null,
+            selectedElementIds: makeNextSelectedElementIds({}, prevState),
+          }));
+          this.cursor.applyForTool();
+          return;
+        }
+
+        this.cursor.reset();
+        this.setState({
+          newElement: null,
+          activeTool: updateActiveTool(this.state, {
+            type: this.state.preferredSelectionTool.type,
+          }),
+        });
+        this.startMarkdownEditing(newElement);
         return;
       }
 

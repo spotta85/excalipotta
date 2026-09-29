@@ -15,6 +15,7 @@ import {
   STICKY_NOTE_EDGE_SHADOW_WIDTH,
   STICKY_NOTE_FOOTER,
   STICKY_NOTE_SHADOW_OPACITY,
+  MARKDOWN_PADDING,
 } from "@excalidraw/common";
 import { normalizeLink, toValidURL } from "@excalidraw/common";
 import { hashString } from "@excalidraw/element";
@@ -52,10 +53,17 @@ import type {
   NonDeletedExcalidrawElement,
 } from "@excalidraw/element/types";
 
+import {
+  getMarkdownExportCSS,
+  renderMarkdown,
+} from "../markdown/renderMarkdown";
+
 import type { RenderableElementsMap, SVGRenderConfig } from "../scene/types";
 import type { AppState, BinaryFiles } from "../types";
 import type { Drawable } from "roughjs/bin/core";
 import type { RoughSVG } from "roughjs/bin/svg";
+
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const roughSVGDrawWithPrecision = (
   rsvg: RoughSVG,
@@ -298,6 +306,55 @@ const renderElementToSvg = (
       );
 
       addToRoot(g || node, element);
+      break;
+    }
+    case "markdown": {
+      const isDarkMode = renderConfig.exportWithDarkMode;
+      const doc = svgRoot.ownerDocument;
+      const radius = getCornerRadius(
+        Math.min(element.width, element.height),
+        element,
+      );
+
+      const g = doc.createElementNS(SVG_NS, "g");
+      g.setAttribute(
+        "transform",
+        `translate(${offsetX || 0} ${
+          offsetY || 0
+        }) rotate(${degree} ${cx} ${cy})`,
+      );
+      if (opacity !== 1) {
+        g.setAttribute("opacity", `${opacity}`);
+      }
+
+      const foreignObject = doc.createElementNS(SVG_NS, "foreignObject");
+      foreignObject.setAttribute("width", `${element.width}`);
+      foreignObject.setAttribute("height", `${element.height}`);
+
+      const scope = `excalidraw-markdown-${element.id}`;
+      const card = doc.createElementNS(XHTML_NS, "div") as HTMLDivElement;
+      card.setAttribute("class", scope);
+      Object.assign(card.style, {
+        width: `${element.width}px`,
+        height: `${element.height}px`,
+        padding: `${MARKDOWN_PADDING}px`,
+        fontSize: `${element.fontSize}px`,
+        borderRadius: `${radius}px`,
+        background: applyDarkModeFilter(element.backgroundColor, isDarkMode),
+        color: applyDarkModeFilter(element.strokeColor, isDarkMode),
+      });
+
+      const style = doc.createElementNS(XHTML_NS, "style");
+      style.textContent = getMarkdownExportCSS(`.${scope}`, isDarkMode);
+      card.appendChild(style);
+
+      const content = doc.createElementNS(XHTML_NS, "div");
+      content.innerHTML = renderMarkdown(element.markdown);
+      card.appendChild(content);
+
+      foreignObject.appendChild(card);
+      g.appendChild(foreignObject);
+      addToRoot(g, element);
       break;
     }
     case "iframe":

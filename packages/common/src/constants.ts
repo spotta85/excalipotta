@@ -10,7 +10,7 @@ import type {
 
 import { COLOR_PALETTE } from "./colors";
 
-export { DEFAULT_STICKY_NOTE_BG } from "./colors";
+export { DEFAULT_STICKY_NOTE_BG, DEFAULT_MARKDOWN_BG } from "./colors";
 
 export const supportsResizeObserver =
   typeof window !== "undefined" && "ResizeObserver" in window;
@@ -264,6 +264,21 @@ export const DEFAULT_STICKY_NOTE_SIZE = 250;
 // floor for a finalized note's width and base height; the UI floor is font-aware
 // on top of it (see `getStickyNoteMinSize`)
 export const STICKY_NOTE_MIN_SIZE = 75;
+
+export const DEFAULT_MARKDOWN_WIDTH = 420;
+export const DEFAULT_MARKDOWN_HEIGHT = 280;
+export const DEFAULT_MARKDOWN_FONT_SIZE = 16;
+export const MARKDOWN_MIN_SIZE = 80;
+export const MARKDOWN_PADDING = 16;
+export const MARKDOWN_CORNER_RADIUS = 12;
+export const DEFAULT_MARKDOWN_SOURCE = `# Markdown
+
+Double-click to **edit**.
+
+\`\`\`ts
+const greet = (name: string) => \`hi \${name}\`;
+\`\`\`
+`;
 export const STICKY_NOTE_SHADOW_OFFSET = 3;
 export const STICKY_NOTE_SHADOW_OPACITY = 0.16;
 export const STICKY_NOTE_EDGE_SHADOW_WIDTH = 0.5;
@@ -565,6 +580,7 @@ export const TOOL_TYPE = {
   frame: "frame",
   magicframe: "magicframe",
   stickynote: "stickynote",
+  markdown: "markdown",
   embeddable: "embeddable",
   laser: "laser",
   autoshape: "autoshape",

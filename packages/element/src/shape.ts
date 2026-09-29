@@ -996,6 +996,7 @@ const _generateElementShape = (
     // sticky notes are painted directly (canvas + SVG) from
     // `getStickyNoteRenderPoints`, never through roughjs
     case "stickynote":
+    case "markdown":
     case "frame":
     case "magicframe":
     case "text":
@@ -1091,6 +1092,7 @@ export const getElementShape = <Point extends GlobalPoint | LocalPoint>(
   switch (element.type) {
     case "rectangle":
     case "stickynote":
+    case "markdown":
     case "diamond":
     case "frame":
     case "magicframe":

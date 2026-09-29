@@ -1,4 +1,6 @@
 import {
+  DEFAULT_MARKDOWN_HEIGHT,
+  DEFAULT_MARKDOWN_WIDTH,
   DEFAULT_STICKY_NOTE_SIZE,
   DRAGGING_THRESHOLD,
   EVENT,
@@ -7,7 +9,12 @@ import {
   viewportCoordsToSceneCoords,
 } from "@excalidraw/common";
 
-import { isStickyNoteElement, newStickyNoteElement } from "@excalidraw/element";
+import {
+  isMarkdownElement,
+  isStickyNoteElement,
+  newMarkdownElement,
+  newStickyNoteElement,
+} from "@excalidraw/element";
 
 import type {
   ExcalidrawNonSelectionElement,
@@ -74,6 +81,22 @@ export const DRAGGABLE_TOOLS: Partial<Record<ToolType, DraggableTool>> = {
           sceneY: element.y + element.height / 2,
           container: element,
         });
+      }
+    },
+  },
+  markdown: {
+    createElement: (app, center) =>
+      newMarkdownElement({
+        type: "markdown",
+        ...centered(center, DEFAULT_MARKDOWN_WIDTH, DEFAULT_MARKDOWN_HEIGHT),
+        strokeColor: app.state.currentItemStrokeColor,
+        opacity: app.state.currentItemOpacity,
+        locked: false,
+        frameId: app.getTopLayerFrameAtSceneCoords(center)?.id ?? null,
+      }),
+    onDrop: (app, element) => {
+      if (isMarkdownElement(element)) {
+        app.startMarkdownEditing(element);
       }
     },
   },

@@ -3,6 +3,7 @@ import type { ElementOrToolType } from "@excalidraw/excalidraw/types";
 export const hasBackground = (type: ElementOrToolType) =>
   type === "rectangle" ||
   type === "stickynote" ||
+  type === "markdown" ||
   type === "iframe" ||
   type === "embeddable" ||
   type === "ellipse" ||
@@ -14,11 +15,12 @@ export const hasBackground = (type: ElementOrToolType) =>
   type === "bucketfill";
 
 export const hasFillStyle = (type: ElementOrToolType) =>
-  hasBackground(type) && type !== "stickynote";
+  hasBackground(type) && type !== "stickynote" && type !== "markdown";
 
 export const hasStrokeColor = (type: ElementOrToolType) =>
   type === "rectangle" ||
   type === "stickynote" ||
+  type === "markdown" ||
   type === "ellipse" ||
   type === "diamond" ||
   type === "freedraw" ||
@@ -61,6 +63,7 @@ export const canChangeRoundness = (type: ElementOrToolType) =>
   type === "line" ||
   type === "diamond" ||
   type === "stickynote" ||
+  type === "markdown" ||
   type === "image";
 
 export const toolIsArrow = (type: ElementOrToolType) => type === "arrow";

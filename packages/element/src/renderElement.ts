@@ -72,6 +72,7 @@ import { getContainingFrame } from "./frame";
 import { getCornerRadius } from "./utils";
 
 import { ShapeCache } from "./shape";
+import { drawMarkdownElementOnCanvas } from "./markdown";
 import {
   getStickyNoteFooter,
   getStickyNotePathCommands,
@@ -468,6 +469,13 @@ const drawElementOnCanvas = (
       }
 
       context.restore();
+      break;
+    }
+    case "markdown": {
+      drawMarkdownElementOnCanvas(element, context, {
+        isDarkMode: renderConfig.theme === THEME.DARK,
+        renderText: renderConfig.isExporting,
+      });
       break;
     }
     case "rectangle":
@@ -975,6 +983,14 @@ export const renderElement = (
     allElementsMap,
   ),
 ) => {
+  if (
+    element.type === "markdown" &&
+    renderConfig.markdownOverlay &&
+    !renderConfig.isExporting
+  ) {
+    return;
+  }
+
   const reduceAlphaForSelection =
     appState.openDialog?.name === "elementLinkSelector" &&
     !appState.selectedElementIds[element.id] &&
@@ -1100,6 +1116,7 @@ const drawElement = (
     }
     case "rectangle":
     case "stickynote":
+    case "markdown":
     case "diamond":
     case "ellipse":
     case "line":

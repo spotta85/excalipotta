@@ -7,6 +7,7 @@ import {
   isLinearElement,
   isLineElement,
   isStickyNoteElement,
+  isMarkdownElement,
   isTextBindableContainer,
   isTextElement,
 } from "@excalidraw/element";
@@ -109,6 +110,17 @@ const getHints = ({
     return t("hints.stickynote");
   }
 
+  if (activeTool.type === "markdown") {
+    return t("hints.markdown");
+  }
+
+  if (appState.editingMarkdownId) {
+    return t("hints.markdown_editing", {
+      shortcut_1: getTaggedShortcutKey("Escape"),
+      shortcut_2: getTaggedShortcutKey("CtrlOrCmd+Enter"),
+    });
+  }
+
   if (activeTool.type === "autoshape") {
     return t("hints.autoshape");
   }
@@ -149,6 +161,16 @@ const getHints = ({
   if (isRotating && lastPointerDownWith === "mouse") {
     return t("hints.rotate", {
       shortcut: getTaggedShortcutKey("Shift"),
+    });
+  }
+
+  if (
+    selectedElements.length === 1 &&
+    isMarkdownElement(selectedElements[0]) &&
+    !appState.editingMarkdownId
+  ) {
+    return t("hints.markdown_selected", {
+      shortcut: getTaggedShortcutKey("Enter"),
     });
   }
 

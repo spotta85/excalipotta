@@ -161,6 +161,7 @@ export type ToolType =
   | "frame"
   | "magicframe"
   | "stickynote"
+  | "markdown"
   | "embeddable"
   | "laser"
   | "autoshape"
@@ -412,6 +413,8 @@ export interface AppState {
    * frame-like element whose name is currently being edited
    */
   editingFrame: ExcalidrawFrameLikeElement["id"] | null;
+  /** markdown card whose source is open in the editor */
+  editingMarkdownId: ExcalidrawElement["id"] | null;
   /**
    * Elements the UI highlights with a bounding-box outline — those that
    * would get added to a frame being dragged/resized.

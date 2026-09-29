@@ -516,6 +516,7 @@ export const intersectElementWithLineSegment = (
   switch (element.type) {
     case "rectangle":
     case "stickynote":
+    case "markdown":
     case "image":
     case "text":
     case "iframe":

@@ -104,6 +104,17 @@ export type ExcalidrawStickyNoteElement = _ExcalidrawElementBase &
     baseHeight: number;
   }>;
 
+/**
+ * A card that renders its `markdown` source (with syntax-highlighted code
+ * blocks) as HTML on top of the canvas.
+ */
+export type ExcalidrawMarkdownElement = _ExcalidrawElementBase &
+  Readonly<{
+    type: "markdown";
+    markdown: string;
+    fontSize: number;
+  }>;
+
 export type ExcalidrawDiamondElement = _ExcalidrawElementBase & {
   type: "diamond";
 };
@@ -207,6 +218,7 @@ export type ExcalidrawFlowchartNodeElement =
 export type ExcalidrawRectanguloidElement =
   | ExcalidrawRectangleElement
   | ExcalidrawStickyNoteElement
+  | ExcalidrawMarkdownElement
   | ExcalidrawImageElement
   | ExcalidrawTextElement
   | ExcalidrawFreeDrawElement
@@ -223,6 +235,7 @@ export type ExcalidrawRectanguloidElement =
 export type ExcalidrawElement =
   | ExcalidrawGenericElement
   | ExcalidrawStickyNoteElement
+  | ExcalidrawMarkdownElement
   | ExcalidrawTextElement
   | ExcalidrawLinearElement
   | ExcalidrawArrowElement
@@ -293,6 +306,7 @@ export type ExcalidrawTextElement = _ExcalidrawElementBase &
 export type ExcalidrawBindableElement =
   | ExcalidrawRectangleElement
   | ExcalidrawStickyNoteElement
+  | ExcalidrawMarkdownElement
   | ExcalidrawDiamondElement
   | ExcalidrawEllipseElement
   | ExcalidrawTextElement

@@ -30,6 +30,7 @@ import {
   frameToolIcon,
   EmbedIcon,
   stickyNoteToolIcon,
+  markdownToolIcon,
 } from "./icons";
 
 import type {
@@ -121,6 +122,10 @@ export const TOOLS = defineTools({
   stickynote: {
     icon: stickyNoteToolIcon,
     letterKey: KEYS.N,
+  },
+  markdown: {
+    icon: markdownToolIcon,
+    letterKey: KEYS.M,
   },
   image: {
     icon: ImageIcon,
@@ -334,6 +339,7 @@ export const LineToolButton = createToolButton("line");
 export const FreedrawToolButton = createToolButton("freedraw");
 export const TextToolButton = createToolButton("text");
 export const StickyNoteToolButton = createToolButton("stickynote");
+export const MarkdownToolButton = createToolButton("markdown");
 export const ImageToolButton = createToolButton("image");
 export const EraserToolButton = createToolButton("eraser");
 export const FrameToolButton = createToolButton("frame");

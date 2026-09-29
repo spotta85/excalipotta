@@ -42,6 +42,9 @@ export type StaticCanvasRenderConfig = {
   pendingFlowchartNodes: PendingExcalidrawElements | null;
   theme: AppState["theme"];
   elementRenderOverrides?: ElementRenderOverrides;
+  /** markdown cards are laid out as HTML over this canvas by the editor, so
+   the canvas skips them. @default false */
+  markdownOverlay?: boolean;
 };
 
 export type SVGRenderConfig = {
@@ -173,6 +176,7 @@ export type ElementShapes = {
   line: Drawable[];
   text: null;
   stickynote: null;
+  markdown: null;
   image: null;
   frame: null;
   magicframe: null;

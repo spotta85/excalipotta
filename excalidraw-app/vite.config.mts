@@ -124,6 +124,14 @@ export default defineConfig(({ mode }) => {
             if (id.includes("@codemirror/") || id.includes("@lezer/")) {
               return "codemirror.chunk";
             }
+
+            // markdown cards' renderer: its own precached file, so the main
+            // bundle stays under the precache size limit
+            if (
+              /node_modules\/(highlight\.js|marked|dompurify)\//.test(id)
+            ) {
+              return "markdown";
+            }
           },
         },
       },
